@@ -1,0 +1,6 @@
+{
+  "candidates": 5000,
+  "total_runtime_sec": 16.950397750013508,
+  "lowest_simple_ratio": 0.28978103084402307,
+  "lowest_poly_ratio": 0.3052204320847065
+}

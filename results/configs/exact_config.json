@@ -1,0 +1,38 @@
+{
+  "instances_per_configuration_regime": 30,
+  "reward_variants": [
+    "independent",
+    "size_correlated"
+  ],
+  "outcomes_per_item": 2,
+  "dimensions_and_sizes": {
+    "2": [
+      6,
+      8,
+      10,
+      12
+    ],
+    "3": [
+      6,
+      8,
+      10
+    ],
+    "4": [
+      5,
+      6,
+      8
+    ],
+    "5": [
+      5,
+      6
+    ]
+  },
+  "regimes": [
+    "low_variance",
+    "high_variance",
+    "positive_correlation",
+    "resource_specialized",
+    "near_capacity"
+  ],
+  "base_seed": 310000
+}

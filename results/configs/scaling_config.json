@@ -1,0 +1,26 @@
+{
+  "instances_per_configuration_regime": 5,
+  "dimensions": [
+    2,
+    3,
+    4,
+    5
+  ],
+  "n_items": [
+    20,
+    50,
+    100
+  ],
+  "regimes": [
+    "low_variance",
+    "high_variance",
+    "positive_correlation",
+    "resource_specialized",
+    "near_capacity"
+  ],
+  "reward_variant": "independent",
+  "outcomes_per_item": 2,
+  "monte_carlo_samples": 10000,
+  "convergence_check_samples": 20000,
+  "base_seed": 610000
+}

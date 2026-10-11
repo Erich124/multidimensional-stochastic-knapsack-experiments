@@ -1,0 +1,23 @@
+{
+  "candidates": 5000,
+  "dimensions": [
+    2,
+    3
+  ],
+  "n_items": [
+    6,
+    8
+  ],
+  "regimes": [
+    "high_variance",
+    "resource_specialized",
+    "near_capacity",
+    "mixed_negative"
+  ],
+  "reward_variants": [
+    "independent",
+    "size_correlated"
+  ],
+  "outcomes_per_item": 2,
+  "base_seed": 910000
+}
