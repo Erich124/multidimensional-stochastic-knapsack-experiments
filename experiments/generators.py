@@ -68,6 +68,48 @@ def controlled_instance(
     return instance
 
 
+def explicit_overflow_instance(
+    dims: int,
+    n_items: int,
+    seed: int,
+    reward_variant: str = "independent",
+) -> Instance:
+    """Supplemental instances where every item can overflow its dominant coordinate."""
+    rng = random.Random(seed)
+    items: list[Item] = []
+    dominant_resources: list[int] = []
+    overflow_probs: list[float] = []
+    for i in range(n_items):
+        dom = i % dims
+        dominant_resources.append(dom)
+        p_over = rng.uniform(0.10, 0.30)
+        overflow_probs.append(p_over)
+        safe = tuple(rng.uniform(0.04, 0.24) for _ in range(dims))
+        overflow_values = []
+        for k in range(dims):
+            if k == dom:
+                overflow_values.append(rng.uniform(1.02, 1.30))
+            else:
+                overflow_values.append(rng.uniform(0.04, 0.24))
+        raw_sizes = [(1.0 - p_over, safe), (p_over, tuple(overflow_values))]
+        expected_sum = sum(prob * sum(size) for prob, size in raw_sizes)
+        if reward_variant == "size_correlated":
+            reward = round(1.0 + 8.0 * min(1.0, expected_sum / max(0.25, dims * 0.35)) + rng.uniform(0.0, 2.0), 3)
+        else:
+            reward = round(rng.uniform(1.0, 10.0), 3)
+        items.append(make_item(f"item_{i+1}", reward, raw_sizes))
+    instance = Instance(
+        name=f"explicit_overflow_{reward_variant}_d{dims}_n{n_items}_s{seed}",
+        dims=dims,
+        items=tuple(items),
+        seed=seed,
+        family=f"explicit_overflow:{reward_variant}",
+    )
+    object.__setattr__(instance, "dominant_resources", tuple(dominant_resources))
+    object.__setattr__(instance, "overflow_probs", tuple(overflow_probs))
+    return instance
+
+
 def _regime_outcomes(
     regime: str,
     dims: int,

@@ -1,0 +1,25 @@
+{
+  "config": {
+    "instances_per_configuration": 30,
+    "dimensions": [
+      2,
+      3,
+      4,
+      5
+    ],
+    "n_items": 6,
+    "reward_variants": [
+      "independent",
+      "size_correlated"
+    ],
+    "base_seed": 930000,
+    "family": "explicit_overflow"
+  },
+  "total_instances": 240,
+  "total_runtime_sec": 0.19073616701643914,
+  "mean_simple_ratio": 0.7845802252418446,
+  "mean_poly_ratio": 0.9168603205609804,
+  "mean_surrogate_density_ratio": 0.9886091938034266,
+  "mean_multidim_density_ratio": 0.9546502930904683,
+  "mean_item_overflow_prob": 0.19653859926282596
+}

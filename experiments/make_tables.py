@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import csv
 import hashlib
+import math
+import statistics
 from pathlib import Path
 
 from .study_utils import environment_info, read_csv, write_csv, write_json
@@ -15,17 +17,21 @@ def make_tables() -> None:
     stress_simple = _read_float_rows("results/stress_search/simple_bottom20.csv")
     stress_poly = _read_float_rows("results/stress_search/poly_bottom20.csv")
 
-    table_exact = _table_exact(exact)
-    table_dim = _table_dimension(exact)
+    table_exact = _table_publication_overall(exact)
+    table_dim = _table_publication_dimension_n6(exact)
     table_scaling = _table_scaling(scaling)
     table_stress = _table_stress(stress_simple, stress_poly)
 
     write_csv("results/tables/table_exact.csv", table_exact)
     write_csv("results/tables/table_dimension.csv", table_dim)
+    write_csv("results/tables/publication_overall.csv", table_exact)
+    write_csv("results/tables/publication_dimension_n6.csv", table_dim)
     write_csv("results/tables/table_scaling.csv", table_scaling)
     write_csv("results/tables/table_stress.csv", table_stress)
-    _write_latex("results/tables/table_exact.tex", "Exact Adaptive Benchmark", table_exact)
-    _write_latex("results/tables/table_dimension.tex", "Effect of Dimension", table_dim)
+    _write_latex("results/tables/table_exact.tex", "Exact Adaptive Benchmark: Overall Performance", table_exact)
+    _write_latex("results/tables/table_dimension.tex", "Matched n=6 Dimension Comparison", table_dim)
+    _write_latex("results/tables/publication_overall.tex", "Exact Adaptive Benchmark: Overall Performance", table_exact)
+    _write_latex("results/tables/publication_dimension_n6.tex", "Matched n=6 Dimension Comparison", table_dim)
     _write_latex("results/tables/table_scaling.tex", "Scaling Runtime", table_scaling)
     _write_latex("results/tables/table_stress.tex", "Difficult-Instance Search", table_stress)
 
@@ -33,37 +39,38 @@ def make_tables() -> None:
     write_json("results/configs/code_manifest.json", _code_manifest())
 
 
-def _table_exact(rows: list[dict[str, object]]) -> list[dict[str, object]]:
-    out = []
-    for regime in sorted({r["regime"] for r in rows}):
-        group = [r for r in rows if r["regime"] == regime and r["reward_variant"] == "independent"]
-        out.append(
-            {
-                "Regime": regime,
-                "Instances": len(group),
-                "Simple/ADAPT": _mean_ci(group, "simple_ratio"),
-                "Poly/ADAPT": _mean_ci(group, "poly_ratio"),
-                "Surrogate Greedy/ADAPT": _mean_ci(group, "surrogate_density_ratio"),
-                "Multi-D Greedy/ADAPT": _mean_ci(group, "multidim_density_ratio"),
-            }
-        )
-    return out
+def _table_publication_overall(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    return [
+        _overall_row("Simple LP", rows, "simple_ratio"),
+        _overall_row("Polymatroid LP", rows, "poly_ratio"),
+        _overall_row("Surrogate-density greedy", rows, "surrogate_density_ratio"),
+        _overall_row("Multi-D density greedy", rows, "multidim_density_ratio"),
+    ]
 
 
-def _table_dimension(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+def _overall_row(label: str, rows: list[dict[str, object]], key: str) -> dict[str, object]:
+    vals = [float(r[key]) for r in rows if r[key] != ""]
+    return {
+        "Algorithm": label,
+        "Observations": len(vals),
+        "Mean": f"{statistics.mean(vals):.6f}",
+        "Median": f"{statistics.median(vals):.6f}",
+        "Minimum": f"{min(vals):.6f}",
+    }
+
+
+def _table_publication_dimension_n6(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     out = []
     for d in sorted({int(r["d"]) for r in rows}):
-        group = [r for r in rows if int(r["d"]) == d and r["reward_variant"] == "independent"]
-        best_baseline = max(_mean(group, "surrogate_density_ratio"), _mean(group, "multidim_density_ratio"))
+        group = [r for r in rows if int(r["d"]) == d and int(r["n"]) == 6]
         out.append(
             {
                 "d": d,
-                "Instances": len(group),
-                "Simple/ADAPT": _mean_ci(group, "simple_ratio"),
-                "Poly/ADAPT": _mean_ci(group, "poly_ratio"),
-                "Best baseline mean": f"{best_baseline:.3f}",
-                "Min Simple": f"{min(float(r['simple_ratio']) for r in group):.3f}",
-                "Min Poly": f"{min(float(r['poly_ratio']) for r in group):.3f}",
+                "Observations": len(group),
+                "Simple mean": f"{_mean(group, 'simple_ratio'):.6f}",
+                "Simple guarantee": f"{7.0 / (16.0 * (d + 1)):.6f}",
+                "Poly mean": f"{_mean(group, 'poly_ratio'):.6f}",
+                "Poly guarantee": f"{(1.0 - math.exp(-(d + 1))) / (2.0 * (d + 1)):.6f}",
             }
         )
     return out
@@ -158,19 +165,6 @@ def _mean(rows: list[dict[str, object]], key: str) -> float:
     return sum(vals) / len(vals) if vals else 0.0
 
 
-def _mean_ci(rows: list[dict[str, object]], key: str) -> str:
-    import math
-    import statistics
-
-    vals = [float(r[key]) for r in rows if r[key] != ""]
-    if not vals:
-        return ""
-    mean = statistics.mean(vals)
-    sd = statistics.stdev(vals) if len(vals) > 1 else 0.0
-    se = sd / math.sqrt(len(vals))
-    return f"{mean:.3f} [{mean - 1.96 * se:.3f}, {mean + 1.96 * se:.3f}]"
-
-
 def _code_manifest() -> dict[str, str]:
     manifest = {}
     for path in sorted(Path("experiments").glob("*.py")):
@@ -182,4 +176,3 @@ def _code_manifest() -> dict[str, str]:
 
 if __name__ == "__main__":
     make_tables()
-

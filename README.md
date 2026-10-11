@@ -1,79 +1,73 @@
 # Multidimensional Stochastic Knapsack Experiments
 
-This repository contains the code and data used for the computational experiments accompanying the paper **Approximation Bounds for Multidimensional Stochastic Knapsack via One-Dimensional Surrogates**.
+This repository contains the computational framework for the multidimensional
+stochastic knapsack manuscript. It evaluates one-dimensional DGV policies after
+lifting each multidimensional item through the surrogate
+`Z_i = max_k S_ik`.
 
-The experiments compare two lifted Dean--Goemans--Vondrák (DGV) policies with two nonadaptive density heuristics on finite-support multidimensional stochastic-knapsack instances. For small instances, the adaptive optimum is computed exactly by Bellman dynamic programming.
+## Reproducibility
 
-## Repository structure
-
-- `experiments/` — model, surrogate construction, DGV policies, exact evaluators, adaptive DP, instance generators, full-study runners, tables, and figures.
-- `tests/` — validation tests for the surrogate, evaluators, DGV implementations, adaptive DP, and lifting property.
-- `results/exact/` — raw and summarized exact-benchmark results.
-- `results/scaling/` — scaling and Monte Carlo results.
-- `results/stress_search/` — difficult-instance search outputs.
-- `results/diagnostics/` — surrogate-geometry and low-polymatroid diagnostics.
-- `results/tables/` and `results/figures/` — generated publication outputs.
-- `ALGORITHM_NOTES.md` — precise implementation notes for the two DGV policies.
-- `COMPUTATIONAL_PLAN.md` — experiment design and validation plan.
-
-## Main experiment
-
-The exact benchmark contains 3,600 finite-support instances with dimensions `d in {2,3,4,5}`. The expected reward of fixed nonadaptive policies is evaluated exactly, and the optimal adaptive value is computed by memoized Bellman dynamic programming.
-
-The larger scaling suite contains 300 instances and uses 10,000 common Monte Carlo realizations per instance.
-
-A separate search evaluates 5,000 additional small exact instances to identify difficult examples. These are computationally observed instances only and are not claimed to be worst cases.
-
-## Requirements
-
-The core exact experiments use the Python standard library. Figure generation additionally uses:
-
-```bash
-pip install -r requirements.txt
-```
-
-Python 3.12 was used for the reported experiments.
-
-## Validation
-
-Run the complete validation suite with:
+Run the unit and regression tests:
 
 ```bash
 python -m unittest discover -s tests -v
 ```
 
-## Reproducing experiments
-
-Run stages individually:
+Run the supplemental explicit-overflow suite:
 
 ```bash
-python -m experiments.run_exact
-python -m experiments.run_scaling
-python -m experiments.run_stress_search
-python -m experiments.make_tables
-python -m experiments.make_figures
+python -m experiments.run_overflow
 ```
 
-Or run the full pipeline:
+Regenerate publication tables from the committed raw data:
+
+```bash
+python -m experiments.make_tables
+```
+
+Run all stages:
 
 ```bash
 python -m experiments.run_all
 ```
 
-The exact benchmark is substantially more expensive than the validation suite because it solves millions of Bellman states.
+The experiment runners are idempotent: rerunning a runner rewrites only that
+runner's owned outputs, so CSV rows are not duplicated.
 
-## Algorithm notes
+## Benchmarks
 
-The one-dimensional DGV policies are implemented from the algorithms analyzed in:
+The main exact benchmark is `results/exact/raw_exact.csv`. It contains 3,600
+small exact instances from five regimes: `low_variance`, `high_variance`,
+`positive_correlation`, `resource_specialized`, and `near_capacity`. Each item
+has two size outcomes, and the benchmark pools independent and size-correlated
+reward models.
 
-Brian C. Dean, Michel X. Goemans, and Jan Vondrák, *Approximating the Stochastic Knapsack Problem: The Benefit of Adaptivity*, Mathematics of Operations Research 33(4), 2008.
+The supplemental explicit-overflow benchmark is
+`results/overflow/raw_overflow.csv`. It contains 240 instances with
+`d in {2,3,4,5}`, `n=6`, two reward models, and 30 replications per
+configuration. In this suite every item has positive probability that
+`Z_i > 1`.
 
-The DGV paper itself is **not redistributed in this repository**. See `experiments/DGV_SIMPLE_IMPLEMENTATION.md` and `experiments/DGV_POLYMATROID_IMPLEMENTATION.md` for implementation details.
+The main benchmark already tests cumulative capacity violations because an
+accepted sequence may later fail when remaining capacity is insufficient. The
+explicit-overflow suite additionally stresses the effective-value adjustment
+`c_i P(Z_i <= 1)` and the truncation `min(Z_i, 1)` used in the one-dimensional
+surrogate relaxation.
 
-## Data and interpretation
+## Publication Tables
 
-All reported ratios to `ADAPT_exact` in the exact benchmark use the exact adaptive Bellman solution for the generated finite-support instance. Large-instance results that use `BEST_TESTED` are empirical comparisons and should not be interpreted as ratios to the true optimum.
+`python -m experiments.make_tables` writes the manuscript-facing tables to:
 
-## License
+- `results/tables/publication_overall.csv`
+- `results/tables/publication_overall.tex`
+- `results/tables/publication_dimension_n6.csv`
+- `results/tables/publication_dimension_n6.tex`
 
-No license is asserted by default. Add an open-source license before inviting third-party reuse if desired.
+For compatibility, the same publication tables are also written as
+`results/tables/table_exact.*` and `results/tables/table_dimension.*`.
+
+The overall table uses all 3,600 exact instances and reports mean, median, and
+minimum ratios for Simple LP, Polymatroid LP, surrogate-density greedy, and
+multi-dimensional density greedy. The matched dimension table uses only `n=6`
+instances, pooling all five original regimes and both reward models, yielding
+exactly 300 observations for each dimension.

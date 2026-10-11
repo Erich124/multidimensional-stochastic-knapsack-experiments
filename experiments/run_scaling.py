@@ -13,6 +13,7 @@ from .study_utils import (
     append_csv,
     ensure_dirs,
     monte_carlo_common,
+    reset_owned_outputs,
     summarize,
     surrogate_diagnostics,
     write_csv,
@@ -37,6 +38,15 @@ SCALING_CONFIG = {
 def run_scaling() -> list[dict[str, object]]:
     ensure_dirs()
     write_json("results/configs/scaling_config.json", SCALING_CONFIG)
+    reset_owned_outputs(
+        [
+            "results/scaling/raw_scaling.csv",
+            "results/scaling/scaling_summary.csv",
+            "results/scaling/scaling_summary_by_dim_n.csv",
+            "results/scaling/mc_convergence_check.csv",
+            "results/scaling/run_metadata.json",
+        ]
+    )
     rows: list[dict[str, object]] = []
     convergence_rows: list[dict[str, object]] = []
     raw_path = "results/scaling/raw_scaling.csv"
@@ -162,4 +172,3 @@ def run_scaling() -> list[dict[str, object]]:
 
 if __name__ == "__main__":
     run_scaling()
-

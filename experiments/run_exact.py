@@ -12,6 +12,7 @@ from .study_utils import (
     evaluate_exact_instance,
     instance_to_jsonable,
     low_poly_details,
+    reset_owned_outputs,
     summarize,
     write_csv,
     write_json,
@@ -41,6 +42,17 @@ DIAG_PATH = "results/diagnostics/surrogate_diagnostics.csv"
 def run_exact() -> list[dict[str, object]]:
     ensure_dirs()
     write_json("results/configs/exact_config.json", EXACT_CONFIG)
+    reset_owned_outputs(
+        [
+            RAW_PATH,
+            LOW_POLY_PATH,
+            DIAG_PATH,
+            "results/exact/exact_summary_by_regime_dim_n.csv",
+            "results/exact/exact_summary_by_regime_dim.csv",
+            "results/exact/exact_summary.csv",
+            "results/exact/run_metadata.json",
+        ]
+    )
     rows: list[dict[str, object]] = []
     low_poly_rows: list[dict[str, object]] = []
     diag_rows: list[dict[str, object]] = []
@@ -125,4 +137,3 @@ def run_exact() -> list[dict[str, object]]:
 
 if __name__ == "__main__":
     run_exact()
-

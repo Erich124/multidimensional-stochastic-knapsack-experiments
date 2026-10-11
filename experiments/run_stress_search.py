@@ -11,6 +11,7 @@ from .study_utils import (
     ensure_dirs,
     evaluate_exact_instance,
     instance_to_jsonable,
+    reset_owned_outputs,
     write_csv,
     write_json,
 )
@@ -30,6 +31,16 @@ STRESS_CONFIG = {
 def run_stress_search() -> list[dict[str, object]]:
     ensure_dirs()
     write_json("results/configs/stress_config.json", STRESS_CONFIG)
+    reset_owned_outputs(
+        [
+            "results/stress_search/search_results.csv",
+            "results/stress_search/simple_bottom20.csv",
+            "results/stress_search/poly_bottom20.csv",
+            "results/stress_search/run_metadata.json",
+            "results/stress_search/simple_bottom20",
+            "results/stress_search/poly_bottom20",
+        ]
+    )
     rows: list[dict[str, object]] = []
     simple_bottom: list[tuple[float, int, dict[str, object], object]] = []
     poly_bottom: list[tuple[float, int, dict[str, object], object]] = []

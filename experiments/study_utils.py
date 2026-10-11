@@ -7,6 +7,7 @@ import json
 import math
 import os
 import platform
+import shutil
 import statistics
 import sys
 import time
@@ -36,6 +37,7 @@ REGIMES = [
 def ensure_dirs() -> None:
     for path in [
         "results/exact",
+        "results/overflow",
         "results/scaling",
         "results/stress_search/simple_bottom20",
         "results/stress_search/poly_bottom20",
@@ -62,6 +64,19 @@ def append_csv(path: str, row: dict[str, object], fieldnames: list[str]) -> None
         if not exists:
             writer.writeheader()
         writer.writerow(row)
+
+
+def reset_owned_outputs(paths: Iterable[str]) -> None:
+    """Remove files/directories owned by one runner before it rewrites them."""
+    for path in paths:
+        target = Path(path)
+        if target.is_dir():
+            shutil.rmtree(target)
+            target.mkdir(parents=True, exist_ok=True)
+        elif target.exists():
+            target.unlink()
+        else:
+            target.parent.mkdir(parents=True, exist_ok=True)
 
 
 def write_csv(path: str, rows: list[dict[str, object]]) -> None:
